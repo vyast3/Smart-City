@@ -1,0 +1,117 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+        <style type="text/css">
+            html { height: 100% }
+            body { height: 100%; margin: 0; padding: 0 }
+            #map_canvas { height: 100% }
+        </style>
+        <script type="text/javascript"
+                src="http://maps.googleapis.com/maps/api/js?key=AIzaSyCHLeDxIjgTe6hYIoWEzy2EURxWazuY3oQ&sensor=true&geodesic:true">
+        </script>
+        <script type="text/javascript">
+            function initialize() {
+                geocoder = new google.maps.Geocoder();
+                var latlng = new google.maps.LatLng(21,77);
+                var myOptions = {
+                    zoom: 8,
+                    center: latlng,
+                    mapTypeId: google.maps.MapTypeId.ROADMAP
+                }
+                map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
+            }
+            function codeAddress() {
+                var address1 = document.getElementById("address1").value;
+                var address2 = document.getElementById("address2").value;
+                var p1,p2;
+                var mygc = new google.maps.Geocoder();
+                mygc.geocode({'address' : address1}, function(results, status){
+                    <!--alert( "lat long: " + results[0].geometry.location.lat()+", "+ results[0].geometry.location.lng() );-->
+                    map.setCenter(results[0].geometry.location);
+                    p1=results[0].geometry.location.lat();
+                    p2= results[0].geometry.location.lng();
+                    var marker = new google.maps.Marker({
+                        map: map,
+                        position: results[0].geometry.location
+
+                    });
+
+                });
+
+                var mygc = new google.maps.Geocoder();
+                mygc.geocode({'address' : address2}, function(results, status){
+                    <!--alert( "lat long: " + results[0].geometry.location.lat()+", "+ results[0].geometry.location.lng() );-->
+                    map.setCenter(results[0].geometry.location);
+
+                    var marker = new google.maps.Marker({
+                        map: map,
+                        position: results[0].geometry.location
+
+                    });
+                    
+                    var flightPlanCoordinates = [
+                        new google.maps.LatLng(p1, p2),
+                        new google.maps.LatLng(results[0].geometry.location.lat(), results[0].geometry.location.lng()),
+                        
+                    ];
+                    var flightPath = new google.maps.Polyline({
+                        path: flightPlanCoordinates,
+                        strokeColor: "#FF0000",
+                        strokeOpacity: 1.0,
+                        strokeWeight: 2
+                    });
+                    flightPath.setMap(map);
+
+                    var origin1 = new google.maps.LatLng(p1, p2);
+                    var origin2 = address1;
+                    var destinationA = address2;
+                    var destinationB =new google.maps.LatLng(results[0].geometry.location.lat(), results[0].geometry.location.lng());
+
+                    var service = new google.maps.DistanceMatrixService();
+                    service.getDistanceMatrix(
+                    {
+                        origins: [origin1, origin2],
+                        destinations: [destinationA, destinationB],
+                        travelMode: google.maps.TravelMode.DRIVING,
+                        avoidHighways: false,
+                        avoidTolls: false
+                    }, callback);
+
+                    function callback(response, status) {
+                        if (status == google.maps.DistanceMatrixStatus.OK) {
+                            var origins = response.originAddresses;
+                            var destinations = response.destinationAddresses;
+
+                            for (var i = 0; i < origins.length; i++) {
+                                var results = response.rows[i].elements;
+                                for (var j = 0; j < results.length; j++) {
+                                    var element = results[j];
+                                    var distance = element.distance.text;
+                                    var duration = element.duration.text;
+                                    var from = origins[i];
+                                    var to = destinations[j];
+                                    alert("duration "+distance);
+                                }
+                            }
+                        }
+
+                    }
+
+                });
+
+
+                
+            }
+        </script>
+    </head>
+    <body onload="initialize()">
+        <input id="address1" type="textbox" value="ujjain"/>
+        <input id="address2" type="textbox" value="indore"/>
+        <input type="button" value="Encode" onclick="codeAddress()"/>
+        <input id="result" type="textbox" value="0"/>
+        <div id="map_canvas" style="width:50%; height:50%"></div>
+
+    </body>
+</html>

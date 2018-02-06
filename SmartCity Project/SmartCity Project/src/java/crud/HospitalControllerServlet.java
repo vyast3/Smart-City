@@ -1,0 +1,127 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package crud;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+/**
+ *
+ * @author Admin
+ */
+public class HospitalControllerServlet extends HttpServlet {
+   public static String type="";
+    /** 
+     * Processes requests for both HTTP <code>GET</code> and <code>POST</code> methods.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+    throws ServletException, IOException {
+        response.setContentType("text/html;charset=UTF-8");
+         String outcome = "/bus.jsp";
+        HttpSession session = request.getSession();
+         String uri = request.getRequestURI();
+        if (uri.endsWith("/HospitalEditServlet")) {
+            Hospital bean = new Hospital();
+            SmartCityHospitalDB.mappingHospitalInfo(request, bean);
+
+
+            String operation = (String) session.getAttribute("Operation");
+            if (operation.equals("U")) {
+                int row = SmartCityHospitalDB.updateHospitalInfo(bean);
+                System.out.println("row count "+row+", "+bean.getId());
+                outcome = "/hospital_read.jsp";
+            }
+            if (operation.equals("I")) {
+                SmartCityHospitalDB.insertHospitalInfo(bean);
+                outcome = "/HospitalIUrlServlet";
+            }
+            request.setAttribute("Result", "Success");
+
+        }
+        if (uri.endsWith("/HospitalUUrlServlet")) {
+            String id = request.getParameter("hospitalId");
+            Hospital bean = SmartCityHospitalDB.getUpdateHospitalInfo(id);
+            request.setAttribute("Hospital", bean);
+            session.setAttribute("Operation", "U");
+            outcome = "/hospital_edit.jsp";
+        }
+          if (uri.endsWith("/HospitalIUrlServlet")) {
+            Hospital hospitalBean = new Hospital();
+            request.setAttribute("Hospital", hospitalBean);
+            session.setAttribute("Operation", "I");
+            outcome = "/hospital_edit.jsp";
+        }
+
+         if (uri.endsWith("/HospitalDServlet")) {
+            SmartCityHospitalDB.deleteHospitalInfo(request.getParameter("hospitalId"));
+            outcome = "/hospital_read.jsp";
+        }
+
+        if (uri.endsWith("/HospitalInfoSearch")) {
+            String cityName = request.getParameter("cityName");
+            request.setAttribute("cityName", cityName);
+            request.setAttribute("type", type);
+            request.setAttribute("Operation", "HospitalInfoSearch");
+            outcome = "/search_hospitalinfo.jsp";
+        }
+
+         if (uri.endsWith("/HospitalRadioCalled")) {
+            type = request.getParameter("type");
+
+            request.setAttribute("type", type);
+            request.setAttribute("Operation", "ShowCityName");
+            outcome = "/search_hospitalinfo.jsp";
+        }
+       getServletContext().getRequestDispatcher(outcome).forward(request, response);
+    
+    } 
+
+    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+    /** 
+     * Handles the HTTP <code>GET</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+    throws ServletException, IOException {
+        processRequest(request, response);
+    } 
+
+    /** 
+     * Handles the HTTP <code>POST</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+    throws ServletException, IOException {
+        processRequest(request, response);
+    }
+
+    /** 
+     * Returns a short description of the servlet.
+     * @return a String containing servlet description
+     */
+    @Override
+    public String getServletInfo() {
+        return "Short description";
+    }// </editor-fold>
+
+}
